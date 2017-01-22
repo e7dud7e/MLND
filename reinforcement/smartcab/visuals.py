@@ -148,13 +148,13 @@ def plot_trials(csv):
 	ax.set_xlabel("Trial Number")
 	extra_y_lim = 0.15
 	min_y_lim = 0.60
-	#y_lim_upper = round(max(maximum + 0.01, min_y_lim),2)
-	ax.set_ylim((0, maximum + 0.01))
-	#ax.set_ylim((0, y_lim_upper))
+	y_lim_upper = round(max(maximum + 0.01, min_y_lim),2)
+	#ax.set_ylim((0, maximum + 0.01)) #original
+	ax.set_ylim((0, y_lim_upper)) #fixed y axis
 	ax.set_xlim((10, len(training_data)))
 
-	ax.set_yticks(np.linspace(0, maximum+0.01, 10))
-	#ax.set_yticks(np.linspace(0, y_lim_upper, 13))
+	#ax.set_yticks(np.linspace(0, maximum+0.01, 10)) #original
+	ax.set_yticks(np.linspace(0, y_lim_upper, 13)) #fixed y axis
 
 	ax.plot(actions['trial'], (1 - actions['good']), color='black', label='Total Bad Actions', linestyle='dotted', linewidth=3)
 	ax.plot(actions['trial'], actions['minor'], color='orange', label='Minor Violation', linestyle='dashed')
