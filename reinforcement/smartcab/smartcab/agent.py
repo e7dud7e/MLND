@@ -25,43 +25,44 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set any additional class parameters as needed
-        self.epsilon_c = 0.05    #Constant for epsilon decay function
+        self.epsilon_c = 0.02    #Constant for epsilon decay function
         self.train_count = 0     #Counts how many training trials
         
-        self.QG = dict()    #Cumulative net rewards for each feature - action pair
+        #self.QG = dict()    #Cumulative net rewards for each feature - action pair
                                  #Use this when there is no direct experience to make a decision during testing
-        self.init_QG()
+        #self.init_QG()
         self.training = True #False when testing
 
-    def init_QG(self):
-        action_dict = {None: list(),
-                       'forward': list(),
-                       'right': list(),
-                       'left' : list()
-                      }
-        self.QG['waypoint'] = dict()
-        self.QG['waypoint'][None] = action_dict.copy()
-        self.QG['waypoint']['forward'] = action_dict.copy()
-        self.QG['waypoint']['right'] = action_dict.copy()
-        self.QG['waypoint']['left'] = action_dict.copy()
-        
-        self.QG['light'] = dict()
-        self.QG['light']['green'] = action_dict.copy()
-        self.QG['light']['red'] = action_dict.copy()
-        
-        self.QG['oncoming'] = dict()
-        self.QG['oncoming'][None] = action_dict.copy()
-        self.QG['oncoming']['forward'] = action_dict.copy()
-        self.QG['oncoming']['right'] = action_dict.copy()
-        self.QG['oncoming']['left'] = action_dict.copy()
-        
-        self.QG['left'] = dict()
-        self.QG['left'][None] = action_dict.copy()
-        self.QG['left']['forward'] = action_dict.copy()
-        self.QG['left']['right'] = action_dict.copy()
-        self.QG['left']['left'] = action_dict.copy()
-        
-        pass
+    # initialize the global Q table (not used in final version)
+#    def init_QG(self):
+#        action_dict = {None: list(),
+#                       'forward': list(),
+#                       'right': list(),
+#                       'left' : list()
+#                      }
+#        self.QG['waypoint'] = dict()
+#        self.QG['waypoint'][None] = action_dict.copy()
+#        self.QG['waypoint']['forward'] = action_dict.copy()
+#        self.QG['waypoint']['right'] = action_dict.copy()
+#        self.QG['waypoint']['left'] = action_dict.copy()
+#        
+#        self.QG['light'] = dict()
+#        self.QG['light']['green'] = action_dict.copy()
+#        self.QG['light']['red'] = action_dict.copy()
+#        
+#        self.QG['oncoming'] = dict()
+#        self.QG['oncoming'][None] = action_dict.copy()
+#        self.QG['oncoming']['forward'] = action_dict.copy()
+#        self.QG['oncoming']['right'] = action_dict.copy()
+#        self.QG['oncoming']['left'] = action_dict.copy()
+#        
+#        self.QG['left'] = dict()
+#        self.QG['left'][None] = action_dict.copy()
+#        self.QG['left']['forward'] = action_dict.copy()
+#        self.QG['left']['right'] = action_dict.copy()
+#        self.QG['left']['left'] = action_dict.copy()
+#        
+#        pass
 
     def reset(self, destination=None, testing=False):
         """ The reset function is called at the beginning of each trial.
@@ -156,6 +157,9 @@ class LearningAgent(Agent):
                 best_action = action
         return best_action
 
+    
+    #This test_mode version does not explore other states with an 
+    #edit distance of 1.
 #    def get_maxQ_action_test_mode(self,state):
 #        best_action = None
 #        
@@ -178,6 +182,8 @@ class LearningAgent(Agent):
 #        
 #        return best_action
     
+    #This version checks other similar states with an edit distance of 1
+    #And adds or subtracts votes to choose the optimal policy
     def get_maxQ_action_test_mode(self,state):
         best_action = None
         
@@ -260,23 +266,24 @@ class LearningAgent(Agent):
         return best_action
     
     #use this in test mode, when a state/action pair hasn't been encountered in training
-    def score_action(self,state,action):
-        score = None
-        waypoint = state[0]
-        light = state[1]
-        oncoming = state[2]
-        left = state[3]
-        
-        waypoint_score = np.mean(self.QG['waypoint'][waypoint][action])
-        light_score = np.mean(self.QG['light'][light][action])
-        oncoming_score = np.mean(self.QG['oncoming'][oncoming][action])
-        left_score = np.mean(self.QG['left'][left][action])
-        
-        #weight the scores by how well they separate the data
-        
-        score = np.mean([waypoint_score,light_score,oncoming_score,left_score])
-        
-        return score
+    #This function was used when the global Q table was included (not in latest version)
+#    def score_action(self,state,action):
+#        score = None
+#        waypoint = state[0]
+#        light = state[1]
+#        oncoming = state[2]
+#        left = state[3]
+#        
+#        waypoint_score = np.mean(self.QG['waypoint'][waypoint][action])
+#        light_score = np.mean(self.QG['light'][light][action])
+#        oncoming_score = np.mean(self.QG['oncoming'][oncoming][action])
+#        left_score = np.mean(self.QG['left'][left][action])
+#        
+#        #weight the scores by how well they separate the data
+#        
+#        score = np.mean([waypoint_score,light_score,oncoming_score,left_score])
+#        
+#        return score
         
     
     #Assume that a net reward of 0.0 indicates that the action has not been tried yet
@@ -410,6 +417,7 @@ class LearningAgent(Agent):
         oncoming = state[2]
         left = state[3]
         
+        #This block was when global Q table was included (not in latest version)
 #        self.QG['waypoint'][waypoint][action].append(reward)
 #        self.QG['light'][light][action].append(reward)
 #        self.QG['oncoming'][oncoming][action].append(reward)
@@ -474,7 +482,7 @@ def run():
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
     #sim.run(n_test=10)
-    sim.run(n_test=10, tolerance=0.60) #optimized
+    sim.run(n_test=10, tolerance=0.93) #optimized
 
 
 if __name__ == '__main__':
