@@ -156,6 +156,28 @@ class LearningAgent(Agent):
                 best_action = action
         return best_action
 
+#    def get_maxQ_action_test_mode(self,state):
+#        best_action = None
+#        
+#        maxQ = self.get_maxQ(state)
+#        valid_actions = list()
+#        action_scores = list()
+#        if maxQ == 0.0: #if we didn't find an action that was good yet:
+#            for action, q in self.Q[state].iteritems():
+#                if q == 0.0: #get all the actions that weren't penalized in training
+#                    valid_actions.append(action)
+#            
+#            #use global Q table to score each action based on existing experiences
+#            for action in valid_actions:
+#                action_scores.append(self.score_action(state,action))
+#                
+#            best_i = np.argmax(action_scores)
+#            best_action = valid_actions[best_i]
+#        else:
+#            best_action = self.get_maxQ_action(state)
+#        
+#        return best_action
+    
     def get_maxQ_action_test_mode(self,state):
         best_action = None
         
@@ -163,19 +185,78 @@ class LearningAgent(Agent):
         valid_actions = list()
         action_scores = list()
         if maxQ == 0.0: #if we didn't find an action that was good yet:
+            #get all the actions that weren't penalized in training
             for action, q in self.Q[state].iteritems():
-                if q == 0.0: #get all the actions that weren't penalized in training
+                if q == 0.0: 
                     valid_actions.append(action)
+        
+            action_scores = [0 for x in valid_actions] #initialize
             
-            #use global Q table to score each action based on existing experiences
-            for action in valid_actions:
-                action_scores.append(self.score_action(state,action))
-                
+            #For each valid action,
+            #Search existing Q table by varying one state feature at a time
+            #check if state exists in Q table first
+            for i, action in enumerate(valid_actions):
+                state_l = list(state)
+                for waypoint in ['forward','right','left']:
+                    state_l[0] = waypoint
+                    state_t = tuple(state_l)
+                    if state_t not in self.Q:
+                        continue
+                    q = self.Q[state_t][action]
+                    if q < 0.0:
+                        action_scores[i] -= 1
+                    elif q > 0.0:
+                        action_scores[i] +=1
+                    else:
+                        pass
+
+                state_l = list(state)
+                for light in ['red', 'green']:
+                    state_l[1] = light
+                    state_t = tuple(state_l)
+                    if state_t not in self.Q:
+                        continue
+                    q = self.Q[state_t][action]
+                    if q < 0.0:
+                        action_scores[i] -= 1
+                    elif q > 0.0:
+                        action_scores[i] +=1
+                    else:
+                        pass
+
+                state_l = list(state)
+                for oncoming in [None, 'forward','right','left']:
+                    state_l[2] = oncoming
+                    state_t = tuple(state_l)
+                    if state_t not in self.Q:
+                        continue
+                    q = self.Q[state_t][action]
+                    if q < 0.0:
+                        action_scores[i] -= 1
+                    elif q > 0.0:
+                        action_scores[i] +=1
+                    else:
+                        pass
+
+                state_l = list(state)
+                for left in [None, 'forward', 'right', 'left']:
+                    state_l[3] = left
+                    state_t = tuple(state_l)
+                    if state_t not in self.Q:
+                        continue
+                    q = self.Q[state_t][action]
+                    if q < 0.0:
+                        action_scores[i] -= 1
+                    elif q > 0.0:
+                        action_scores[i] +=1
+                    else:
+                        pass
+
             best_i = np.argmax(action_scores)
             best_action = valid_actions[best_i]
-        else:
+            
+        else: #otherwise, rely on the previous encounters to choose best action
             best_action = self.get_maxQ_action(state)
-        
         return best_action
     
     #use this in test mode, when a state/action pair hasn't been encountered in training
@@ -329,10 +410,10 @@ class LearningAgent(Agent):
         oncoming = state[2]
         left = state[3]
         
-        self.QG['waypoint'][waypoint][action].append(reward)
-        self.QG['light'][light][action].append(reward)
-        self.QG['oncoming'][oncoming][action].append(reward)
-        self.QG['left'][left][action].append(reward)
+#        self.QG['waypoint'][waypoint][action].append(reward)
+#        self.QG['light'][light][action].append(reward)
+#        self.QG['oncoming'][oncoming][action].append(reward)
+#        self.QG['left'][left][action].append(reward)
         return
 
 	

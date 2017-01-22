@@ -242,9 +242,9 @@ class Simulator(object):
                     f.write("\n")  
                     
                 #also add the global q table
-                f.write("Global Q table\n")
-                QG_str = pp.pformat(a.QG)
-                f.write(QG_str)
+                #f.write("Global Q table\n")
+                #QG_str = pp.pformat(a.QG)
+                #f.write(QG_str)
                 
                 self.table_file.close()
 
