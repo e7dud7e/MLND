@@ -318,9 +318,17 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
+    
     #sim = Simulator(env=env, update_delay=.01, display=False, log_metrics=True) #default
-    sim = Simulator(env=env, update_delay=.01, display=False, log_metrics=True, optimized=True) #optimized
-	#sim = Simulator(env=env, update_delay=1, display=True, log_metrics=True) #for sim-no-learning log
+    
+    #optimized
+    #sim = Simulator(env=env, update_delay=.01, display=False, log_metrics=True, optimized=True) 
+    
+    #for visuals, no logging
+    sim = Simulator(env=env, update_delay=1, display=True, log_metrics=False, optimized=True)
+	
+    #sim = Simulator(env=env, update_delay=1, display=True, log_metrics=True) #for sim-no-learning log
+    
     
     ##############
     # Run the simulator
