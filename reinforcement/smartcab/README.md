@@ -5,7 +5,38 @@
 ### Install
 
 This project requires **Python 2.7** with the [pygame](https://www.pygame.org/wiki/GettingStarted
-) library installed
+) library installed.
+
+I included an environment.yaml to let you set up the environment using anaconda.
+Run:
+conda env create -f environment.yaml
+
+Then activate the environment "smartcab".
+For mac/linx:
+source activate smartcab
+
+For windows
+activate smartcab
+
+Note that if installing pygame by yourself, if conda does not work, try uninstalling pygame, then installing using pip:
+
+pip install pygame
+
+From my experience, when installing pygame using the command:
+conda install -c https://conda.anaconda.org/quasiben pygame
+
+If I then run the smartcab, the visual simulation does not appear.
+python smartcab/agent.py
+
+To fix this, I uninstall pygame:
+conda remove pygame
+
+Then I install pygame using pip
+pip install pygame
+
+Then when I run the smartcab application, the visual simulation window appears:
+python smartcab/agent.py
+
 
 ### Code
 

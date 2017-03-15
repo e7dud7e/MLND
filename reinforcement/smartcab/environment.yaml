@@ -1,0 +1,42 @@
+name: smartcab
+channels: !!python/tuple
+- conda-forge
+- defaults
+dependencies:
+- conda-forge::backports_abc=0.5=py27_0
+- conda-forge::blas=1.1=openblas
+- conda-forge::ca-certificates=2017.1.23=0
+- conda-forge::certifi=2017.1.23=py27_0
+- conda-forge::cycler=0.10.0=py27_0
+- conda-forge::freetype=2.7=1
+- conda-forge::functools32=3.2.3.2=py27_1
+- conda-forge::libgfortran=3.0.0=0
+- conda-forge::libpng=1.6.28=0
+- conda-forge::matplotlib=2.0.0=np112py27_2
+- conda-forge::ncurses=5.9=10
+- conda-forge::numpy=1.12.0=py27_blas_openblas_200
+- conda-forge::openblas=0.2.19=1
+- conda-forge::openssl=1.0.2h=3
+- conda-forge::pandas=0.19.2=np112py27_1
+- conda-forge::pip=9.0.1=py27_0
+- conda-forge::pyparsing=2.2.0=py27_0
+- conda-forge::python=2.7.12=2
+- conda-forge::python-dateutil=2.6.0=py27_0
+- conda-forge::pytz=2016.10=py27_0
+- conda-forge::readline=6.2=0
+- conda-forge::setuptools=33.1.0=py27_0
+- conda-forge::singledispatch=3.4.0.3=py27_0
+- conda-forge::six=1.10.0=py27_1
+- conda-forge::sqlite=3.13.0=1
+- conda-forge::ssl_match_hostname=3.5.0.1=py27_1
+- conda-forge::subprocess32=3.2.7=py27_0
+- conda-forge::tk=8.5.19=1
+- conda-forge::tornado=4.4.2=py27_0
+- conda-forge::wheel=0.29.0=py27_0
+- conda-forge::zlib=1.2.11=0
+- pip:
+  - backports-abc==0.5
+  - backports.ssl-match-hostname==3.5.0.1
+  - pygame==1.9.3
+prefix: /Users/edude/anaconda/envs/smartcab
+
