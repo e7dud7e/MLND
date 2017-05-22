@@ -7,7 +7,13 @@ May 21, 2017
 
 ### Domain Background
 
-I've chosen an image classification problem that identifies whether a cervix is one of 3 classes.  This is important for cervical cancer screening, because the cervix type determines whether a particular cancer treatment will be effective, or whether a different procedure is required.  My mom had cervical cancer before so this is an interesting topic for me.
+I've chosen an image classification problem that identifies whether a cervix is one of 3 classes.  This is important for cervical cancer screening, because the cervix type determines whether a particular cancer treatment will be effective, or whether a different procedure is required.  Before AlexNet showed the promise of convolutional neural networks in imag classification in 2012, various computer vision techniques were used in medical imaging.  Since 2015, use of neural networks in medical imaging has gained prominence, convolutional neural networks in particular, and to a lesser extent, recurrent neural networks, autoencoders, restricted boltzmann machines.  Within convolutional networks, the four most well-known architectures are AlexNet, VGG-19, GoogLeNet, and ResNet.  ResNet is currently the best performing model.  There are also multi-stream architectures, in which the original input channels (for instance, red, green and blue) can be included into later layers, and not just the input layer.  In the case of medical imaging, the different channels can be different scales of the same image (zoomed in for more detail, zoomed out for more context).  Another use of multi-stream is for 3D images, where the original data is divided into 2D slices that are fed as separate input streams.
+
+When using transfer learning (using pre-trained architectures such as ResNet), we can either use it as a feature extractor, and replace the output layer.  This does not require further network training. Another option is to fine-tune the existing network, by either replacing more of the later layers, or by training the network and updating the pre-trained weights based on the current data set.
+
+Reference: [A Survey on Deep Learning in Medical Image Analysis](https://arxiv.org/abs/1702.05747)
+
+My mom had cervical cancer before so this is an interesting topic for me.
 
 ### Problem Statement
 
@@ -17,7 +23,11 @@ The measure of success will be the final total loss on the test data (cross-entr
 
 ### Datasets and Inputs
 
-The data are jpg images of cervices, and their labels as type 1, 2 or 3.  These are available from the [Kaggle site](https://www.kaggle.com/philschmidt/cervix-eda-model-selection/input).  In addition to the training and test sets, there are also more images that may be useful for training or for validation, but may be of lower image quality or pictures of the same cervix from the original training set.  I will try to use some images from the additional data sets to see how they affect performance.
+The data are jpg images of cervices, and their labels as type 1, 2 or 3.  These are available from the [Kaggle site](https://www.kaggle.com/philschmidt/cervix-eda-model-selection/input).  In addition to the training and test sets, there are also more images that may be useful for training or for validation, but may be of lower image quality or pictures of the same cervix from the original training set.
+
+1481 images are in the training set.  
+
+The image sizes vary; most are 3264 by 2448 (or 2448 by 3264), but others are larger (3096 by 4128).  Some have more rows than columns, others have more columns than rows.  When resizing to make the shapes standard, I may first try to rotate the images so that their longest side is the number of columns.  That way, the distortion from converting a rectangle to a square will at least be the same.  I may resize the images to be somewhere between 133 x 100, to 655 x 500 (to keep the aspect ratio 1 x 1.33).
 
 ### Solution Statement
 
@@ -26,7 +36,7 @@ I will pre-process the data and feed it into a convolutional neural network.  I 
 
 ### Benchmark Model
 
-The benchmark will be the final test images and labels when released by Kaggle.  My my model's predictions can be compared to the correct labels of the test set using the average cross entropy loss.
+My benchmark will be the Kaggle leaderboards; I want to get in the top 300 of the 661 participants.  This requires a test loss of under 1.0. 
 
 ### Evaluation Metrics
 
