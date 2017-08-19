@@ -10,6 +10,7 @@ August 13, 2017
 [img_input_02]: ./examples/input_images_05_to_08.jpg "input 02"
 [img_input_03]: ./examples/input_images_09_to_12.jpg "input 03"
 [img_input_04]: ./examples/input_images_13_to_16.jpg "input 04"
+[img_loss]: ./examples/loss.png "loss function"
 
 ## I. Definition
 _(approx. 1-2 pages)_
@@ -49,6 +50,7 @@ I will measure the model performance using a the average log loss function.  The
 The log loss function is also the metric that is used for the Kaggle competition.
 
 
+
 ## II. Analysis
 _(approx. 2-4 pages)_
 
@@ -56,16 +58,8 @@ _(approx. 2-4 pages)_
 In this section, you will be expected to analyze the data you are using for the problem. This data can either be in the form of a dataset (or datasets), input data (or input files), or even an environment. The type of data should be thoroughly described and, if possible, have basic statistics and information presented (such as discussion of input features or defining characteristics about the input or environment). Any abnormalities or interesting qualities about the data that may need to be addressed have been identified (such as features that need to be transformed or the possibility of outliers). Questions to ask yourself when writing this section:
 - _If a dataset is present for this problem, have you thoroughly discussed certain features about the dataset? Has a data sample been provided to the reader?_
 - _If a dataset is present for this problem, are statistics about the dataset calculated and reported? Have any relevant results from this calculation been discussed?_
-- _If a dataset is **not** present for this problem, has discussion been made about the input space or input data for your problem?_
-- _Are there any abnormalities or characteristics about the input space or dataset that need to be addressed? (categorical variables, missing values, outliers, etc.)_
 
-There are 1147 training images.  Since these are provided by the TSA, the resolution and size of images are identical across samples, and the volunteers being scanned are of various sizes and genders, but are consistently placed in the center of the image.  The data format of the smallest size (.aps) has images in one channel.  In order to feed the data into the pre-trained VGG network, I need to pad the image to make it square, resize it to the dimensions expected by the VGG network, and also copy the single channel into 3 channels, since the pre-trained network expects RGB images with 3 channels.
-
-### Exploratory Visualization
-In this section, you will need to provide some form of visualization that summarizes or extracts a relevant characteristic or feature about the data. The visualization should adequately support the data being used. Discuss why this visualization was chosen and how it is relevant. Questions to ask yourself when writing this section:
-- _Have you visualized a relevant characteristic or feature about the dataset or input data?_
-- _Is the visualization thoroughly analyzed and discussed?_
-- _If a plot is provided, are the axes, title, and datum clearly defined?_
+There are 1147 training images.  Since these are provided by the TSA, the resolution and size of images are identical across samples, and the volunteers being scanned are of various sizes and genders, but are consistently placed in the center of the image.  The data format of the smallest size (.aps) has images in one channel, a height of 660, width of 512, and 16 angles.  
 
 I display 16 sample images and the locations of the threats.  
 ![input example 01][img_input_01]
@@ -73,6 +67,11 @@ I display 16 sample images and the locations of the threats.
 ![input example 03][img_input_03]
 ![input example 04][img_input_04]
 
+### Exploratory Visualization
+In this section, you will need to provide some form of visualization that summarizes or extracts a relevant characteristic or feature about the data. The visualization should adequately support the data being used. Discuss why this visualization was chosen and how it is relevant. Questions to ask yourself when writing this section:
+- _Have you visualized a relevant characteristic or feature about the dataset or input data?_
+- _Is the visualization thoroughly analyzed and discussed?_
+- _If a plot is provided, are the axes, title, and datum clearly defined?_
 
 I aggregate the label data to show the frequency that a dangerous object is hidden in each of the 17 body regions.  The frequency that a threat occurs on a particular body zone ranges from 7.8% to 11.6%, with an average of 9.6% across all training samples.
 ![frequency of threats][img_frequency_threats]
@@ -85,20 +84,29 @@ In this section, you will need to discuss the algorithms and techniques you inte
 - _Is it made clear how the input data or datasets will be handled by the algorithms and techniques chosen?_
 
 #### Data Pre-processing
-Since the data is 
+In order to fit the images into the VGG network, I size the images to be 224 by 224, with values that range from 0 to 1.  To avoid distorting the images, which are originally 660 high by 512 wide, I pad the image with zeros first, so that the shorter side (width) first equals the longer side (the height).  Once the image is square, I transform it from a 612 x 612 square to a 224 x 224 square.  
+
+Also, since the VGG network expects the inputs to be 3 channel RGB images, I copy the single channel image into three channels before feeding the data into the network.
 
 #### Neural Network
-I am using a pre-trained VGG convolutional neural network to generate inputs into a smaller multi-view convolutional neural network.
+I am using a pre-trained VGG convolutional neural network to generate inputs into a smaller multi-view convolutional neural network.  I tried both the vgg16 network and vgg19 network.  For vgg16, I took the output of conv5_3 (the 13th and last convolutional layer).  For vgg19, I took the output of conv5_4, which is the 16th and last convolutional layer.
 
-I am using transfer learning and the pre-trained VGG network because it provides more insight into lower level features, since it was trained on more images for a longer period of time.  The trainable network includes 3 convolutional layers with increasing depth (number of channels) and decreasing width and height.  By condensing the height and width we attempt to aggregate lower level features into higher level features.  By increasing depth, we leave more room for different combinations of the lower level features.
+I am using transfer learning and the pre-trained VGG network because it provides more insight into lower level features, since it was trained on more images for a longer period of time.  
 
-Since the inputs are multiple 2D images for a single observation, we reuse the same weights for the trainable convolutional layers, for all angles. We still generate outputs for each of the angles, so if we have 16 angles, the convolutional layers also output 16 sets of activations.
+I added 3 convolutional layers to process the output of the pre-trained network.
+convolution 1 has a 3x3 kernel, stride of 1, and depth 512.
+convolution 2 has a 3x3 kernel, stride of 2, and depth of 1024
+convolution 3 has a 3x3 kernel, stride of 1, and depth of 1024 
+
+By condensing the height and width I attempt to aggregate lower level features into higher level features.  By increasing depth, I leave more room for different combinations of the lower level features.
+
+Since the inputs are multiple 2D images for a single observation, I reuse the same weights for the trainable convolutional layers, for all angles. We still generate outputs for each of the angles, so if we have 16 angles, the convolutional layers also output 16 sets of activations.
 
 Next, an aggregation step flattens the last convolutional layer and aggregates them by taking the maximum for each element position, across all 16 sets of tensors.  So it's in effect collapsing the set of 16 tensors from 16 angles into one tensor of the same shape.  From this point onward, the rest of the neural network is the same as a convolutional neural network that works with 2D images.
 
-The next three layers are fully connected (dense) layers of decreasing size.  The first dense layer is 2048 units, the second is 512, and then the output layer has 17 units, to represent the 17 body region zones.  We pass the 17 logits through a sigmoid activation so that the output can be treated as a probability that ranges between 0 and 1.
+The next three layers are fully connected (dense) layers of decreasing size.  The first dense layer is 2048 units, the second is 512. The fully connected layers get progressively smaller, so that each successive layer aggregates the information from the previous layer.
 
-
+The output layer has 17 units, to represent the 17 body region zones.  We pass the 17 logits through a sigmoid activation so that the output can be treated as a probability that ranges between 0 and 1.
 
 
 ### Benchmark
@@ -107,6 +115,9 @@ In this section, you will need to provide a clearly defined benchmark result or 
 - _Is it clear how this result or value was obtained (whether by data or by hypothesis)?_
 
 The Kaggle leaderboard calculates an average log loss function on a test data set, and serves as a good source for a benchmark.  My goal is to reach a loss score of 0.30 or lower, as this is where a significant number of competitors rank.  The loss score for a completely naive 0.5 prediction is 0.69, so I definitely want to score below that.
+
+Here is the loss function as described on the Kaggle competition's page.
+![loss function][img_loss]
 
 
 ## III. Methodology
@@ -118,6 +129,7 @@ In this section, all of your preprocessing steps will need to be clearly documen
 - _Based on the **Data Exploration** section, if there were abnormalities or characteristics that needed to be addressed, have they been properly corrected?_
 - _If no preprocessing is needed, has it been made clear why?_
 
+Since the data was generated by the TSA, there aren't any abnormalities or outliers that should be removed from the training or testing data.
 
 
 ### Implementation
@@ -126,11 +138,72 @@ In this section, the process for which metrics, algorithms, and techniques that 
 - _Were there any complications with the original metrics or techniques that required changing prior to acquiring a solution?_
 - _Was there any part of the coding process (e.g., writing complicated functions) that should be documented?_
 
+
+#### Pre-trained network
+For the VGG pre-trained network, I downloaded the version of tensorflow_vgg provided by Udacity, since the one directly from the original github had a bug when I ran it.
+So I used 
+```
+git clone https://github.com/udacity/deep-learning.git
+```
+and not
+```
+git clone https://github.com/machrisaa/tensorflow-vgg.git
+```
+
+From there, I copied the deep-learning/transfer-learning/tensorflow_vgg folder.
+Udacity has a convenient place that stored the pre-trained weights for vgg16 (vgg16.npy), but for vgg19, I went to the original github page of machrisaa and downloaded the pre-trained weights in the file vgg19.npy.
+
+In the get_codes_vgg function, I'm working with 3D data.  The data dimensions are: batch, angle, height, width, depth.
+When I feed each 2D slice into the VGG network, I'm saving the outputs of the network into a list of size 16 (1 for each angle), so that each numpy array stored in the list has dimensions batch, height, width, depth.  
+
+When I'm done collecting all the outputs of the pre-trained network, I convert the list of size 16 into one big numpy array, which has dimensions angle, batch, height, width, depth.  Since I want to keep the order of the dimensions the same as the input data, I use a transpose to re-order the dimensions into batch, angle, height, width, depth.  I save these "codes" to disk so that I can use them later.
+
+I saved the training data codes that are output from the vgg16 network, and also the codes that are output from the vgg19 network.  I did the same for the smaller test data set.
+
+#### Trainable network
+
+I built a small multi-view convolutional neural network that takes the outputs of the pre-trained network as its inputs.  I use 3 convolutional layers, and each layer includes a convolution, batch normalization, a leaky relu activation, then a dropout.
+
+Since this is 3D data, I feed each of the 16 2D slices into the network in a loop.  I initialize weights for the first angle, but all subsequent angles reuse the weights.  I use a variable scope to reuse the weights.  I flatten the output of the final convolutional layer, and save these in a list of 16 elements, one for each angle.
+
+Next, I use a view pooling layer that combines all 16 angles into a single tensor.  I use a reduce_max function, which lines up all 16 tensors, and for each position within those tensors, takes the maximum out of the 16, and saves that into a new tensor.  The output of this pooling layer has the same dimensions as one single tensor within the list of 16.
+
+I pass this pooled layer into two fully connected layers of size 2048 and then 512.  The final output layer has 17 logits that represent the 17 body regions.  I pass these logits through a sigma activation so that each represents a probability between 0 and 1.
+
+#### Training
+I use a log loss function to measure the error between prediction and actual targets, as this is the same metric used for the kaggle competition.  I use an AdamOptimizer to perform back propagation, which uses a learning rate of 0.0001, and a beta1 of 0.5. 
+
+
 ### Refinement
 In this section, you will need to discuss the process of improvement you made upon the algorithms and techniques you used in your implementation. For example, adjusting parameters for certain models to acquire improved solutions would fall under the refinement category. Your initial and final solutions should be reported, as well as any significant intermediate results as necessary. Questions to ask yourself when writing this section:
 - _Has an initial solution been found and clearly reported?_
 - _Is the process of improvement clearly documented, such as what techniques were used?_
 - _Are intermediate and final solutions clearly reported as the process is improved?_
+
+I tried various networks.  For instance, I tried 4 convolutions and 3 dense layers:
+convolution: kernel 3x3, stride 1, depth 512
+convolution: kernel 3x3, stride 2, depth 1024
+convolution: kernel 3x3, stride 1, depth 1024
+convolution: kernel 3x3, stride 1, depth 1024
+fully connected: size 2048
+fully connected: size 512
+fully connected: size 512
+
+
+I tried the same but started with the vgg19 output as the input into the trainable network.  The results were no better, or worse than with vgg16.
+
+My the losses hovered around 0.34 to 0.37 for most attempts.
+
+My final version used vgg16 followed by this network:
+convolution: kernel 3x3, stride 1, depth 512
+convolution: kernel 3x3, stride 2, depth 1024
+convolution: kernel 3x3, stride 1, depth 1024
+fully connected: size 2048
+fully connected: size 512.
+Trained on 11 epochs, batch size 64
+
+I got a validation loss of 0.3253, and when I processed the test data set and uploaded my predictions on kaggle, I got a 0.30780.
+
 
 
 ## IV. Results
@@ -142,6 +215,9 @@ In this section, the final model and any supporting qualities should be evaluate
 - _Has the final model been tested with various inputs to evaluate whether the model generalizes well to unseen data?_
 - _Is the model robust enough for the problem? Do small perturbations (changes) in training data or the input space greatly affect the results?_
 - _Can results found from the model be trusted?_
+
+
+
 
 ### Justification
 In this section, your model’s final solution and its results should be compared to the benchmark you established earlier in the project using some type of statistical analysis. You should also justify whether these results and the solution are significant enough to have solved the problem posed in the project. Questions to ask yourself when writing this section:
