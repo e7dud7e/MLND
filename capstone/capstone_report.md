@@ -11,6 +11,13 @@ August 13, 2017
 [img_input_03]: ./examples/input_images_09_to_12.jpg "input 03"
 [img_input_04]: ./examples/input_images_13_to_16.jpg "input 04"
 [img_loss]: ./examples/loss.png "loss function"
+[img_loss_chart_03]: ./examples/loss_chart_03.png "loss chart 3"
+[img_loss_chart_04]: ./examples/loss_chart_04.png "loss chart 4"
+[img_loss_chart_05]: ./examples/loss_chart_05.png "loss chart 5"
+[img_loss_chart_06]: ./examples/loss_chart_06.png "loss chart 6"
+[img_loss_chart_07]: ./examples/loss_chart_07.png "loss chart 7"
+[img_loss_chart_08]: ./examples/loss_chart_08.png "loss chart 8"
+[img_test_loss]: ./examples/mlnd_kaggle_test_loss.png "test loss kaggle"
 
 ## I. Definition
 _(approx. 1-2 pages)_
@@ -19,6 +26,8 @@ _(approx. 1-2 pages)_
 In this section, look to provide a high-level overview of the project in layman’s terms. Questions to ask yourself when writing this section:
 - _Has an overview of the project been provided, such as the problem domain, project origin, and related datasets or input data?_
 - _Has enough background information been given so that an uninformed reader would understand the problem domain and following problem statement?_
+
+
 This project is a computer vision and object detection task to help identify dangerous objects during airport security screening.  The data is provided by the Transportation Security Administration of the United States, and includes 3-dimensional images of body scans, some which include objects that we want to detect automatically.  In addition to identifying these objects, the goal is to identify where on the body these objects are located.  The TSA defines 17 body regions on which objects can be detected.  Examples of these regions include the left forearm, the right waist, left ankle, etc.
 
 The goal is to develop a aystem that views a body scan, then correctly predicts the probability that a threat is hidden on each of the 17 body regions.
@@ -89,7 +98,7 @@ In order to fit the images into the VGG network, I size the images to be 224 by 
 Also, since the VGG network expects the inputs to be 3 channel RGB images, I copy the single channel image into three channels before feeding the data into the network.
 
 #### Neural Network
-I am using a pre-trained VGG convolutional neural network to generate inputs into a smaller multi-view convolutional neural network.  I tried both the vgg16 network and vgg19 network.  For vgg16, I took the output of conv5_3 (the 13th and last convolutional layer).  For vgg19, I took the output of conv5_4, which is the 16th and last convolutional layer.
+I am using a pre-trained VGG convolutional neural network to generate inputs into a smaller multi-view convolutional neural network.  I used the vgg16 network.  For vgg16, I took the output of conv5_3 (the 13th and last convolutional layer).
 
 I am using transfer learning and the pre-trained VGG network because it provides more insight into lower level features, since it was trained on more images for a longer period of time.  
 
@@ -145,30 +154,28 @@ So I used
 ```
 git clone https://github.com/udacity/deep-learning.git
 ```
-and not
-```
-git clone https://github.com/machrisaa/tensorflow-vgg.git
-```
+instead of using https://github.com/machrisaa/tensorflow-vgg.git
+
 
 From there, I copied the deep-learning/transfer-learning/tensorflow_vgg folder.
-Udacity has a convenient place that stored the pre-trained weights for vgg16 (vgg16.npy), but for vgg19, I went to the original github page of machrisaa and downloaded the pre-trained weights in the file vgg19.npy.
+Udacity has a convenient place on Amazon Web Services that stored the pre-trained weights for vgg16 (vgg16.npy).
 
 In the get_codes_vgg function, I'm working with 3D data.  The data dimensions are: batch, angle, height, width, depth.
 When I feed each 2D slice into the VGG network, I'm saving the outputs of the network into a list of size 16 (1 for each angle), so that each numpy array stored in the list has dimensions batch, height, width, depth.  
 
 When I'm done collecting all the outputs of the pre-trained network, I convert the list of size 16 into one big numpy array, which has dimensions angle, batch, height, width, depth.  Since I want to keep the order of the dimensions the same as the input data, I use a transpose to re-order the dimensions into batch, angle, height, width, depth.  I save these "codes" to disk so that I can use them later.
 
-I saved the training data codes that are output from the vgg16 network, and also the codes that are output from the vgg19 network.  I did the same for the smaller test data set.
+I saved the training data codes that are output from the vgg16 network.  I did the same for the smaller test data set.
 
 #### Trainable network
 
-I built a small multi-view convolutional neural network that takes the outputs of the pre-trained network as its inputs.  I use 3 convolutional layers, and each layer includes a convolution, batch normalization, a leaky relu activation, then a dropout.
+I built a small multi-view convolutional neural network that takes the outputs of the pre-trained network as its inputs.  I add some convolutional layers, and each layer includes a convolution, batch normalization, a leaky relu activation, then a dropout.
 
 Since this is 3D data, I feed each of the 16 2D slices into the network in a loop.  I initialize weights for the first angle, but all subsequent angles reuse the weights.  I use a variable scope to reuse the weights.  I flatten the output of the final convolutional layer, and save these in a list of 16 elements, one for each angle.
 
 Next, I use a view pooling layer that combines all 16 angles into a single tensor.  I use a reduce_max function, which lines up all 16 tensors, and for each position within those tensors, takes the maximum out of the 16, and saves that into a new tensor.  The output of this pooling layer has the same dimensions as one single tensor within the list of 16.
 
-I pass this pooled layer into two fully connected layers of size 2048 and then 512.  The final output layer has 17 logits that represent the 17 body regions.  I pass these logits through a sigma activation so that each represents a probability between 0 and 1.
+I pass this pooled layer into some fully connected layers.  The final output layer has 17 logits that represent the 17 body regions.  I pass these logits through a sigma activation so that each represents a probability between 0 and 1.
 
 #### Training
 I use a log loss function to measure the error between prediction and actual targets, as this is the same metric used for the kaggle competition.  I use an AdamOptimizer to perform back propagation, which uses a learning rate of 0.0001, and a beta1 of 0.5. 
@@ -180,31 +187,111 @@ In this section, you will need to discuss the process of improvement you made up
 - _Is the process of improvement clearly documented, such as what techniques were used?_
 - _Are intermediate and final solutions clearly reported as the process is improved?_
 
-I tried various networks.  For instance, I tried 4 convolutions and 3 dense layers:
-convolution: kernel 3x3, stride 1, depth 512
-convolution: kernel 3x3, stride 2, depth 1024
-convolution: kernel 3x3, stride 1, depth 1024
-convolution: kernel 3x3, stride 1, depth 1024
-fully connected: size 2048
-fully connected: size 512
-fully connected: size 512
+I chose some hyper-parameters and mostly modified the number of epochs, and the design of the trainable network layers.  I used a low learning rate of 0.0001, beta1 of 0.5, batch size of 64, and dropout keep probability of 0.5
 
+For the network design, I incrementally adjusted the number of layers, the number of filters (a.k.a. channels, or depth), and the stride size.
 
-I tried the same but started with the vgg19 output as the input into the trainable network.  The results were no better, or worse than with vgg16.
+#### Trial 3
+I first started with two convolutional layers and two dense layers.
 
-My the losses hovered around 0.34 to 0.37 for most attempts.
+ layer name | details |
+convolution 1: | kernel 3x3, stride 2x2, valid padding, depth 512 |
+convolution 2: | kernel 3x3, stride 2x2, valid padding, depth 1024 |
+fully connected: | size 1024 |
+fully connected: | size 256 |
 
-My final version used vgg16 followed by this network:
-convolution: kernel 3x3, stride 1, depth 512
-convolution: kernel 3x3, stride 2, depth 1024
-convolution: kernel 3x3, stride 1, depth 1024
-fully connected: size 2048
-fully connected: size 512.
-Trained on 11 epochs, batch size 64
+| Layer Name    | Kernel/Filter Size | Stride | Padding | Depth / Channels |
+| --- |:---:| :---:| :---:| :---:|
+| convolution 1 | 3x3 | 2x2 | valid | 512 |
+| convolution 2 | 3x3 | 2x2 | valid | 1024 |
 
-I got a validation loss of 0.3253, and when I processed the test data set and uploaded my predictions on kaggle, I got a 0.30780.
+| Layer Name | Size |
+| --- |:---:|
+| fully connected 1 | 1024 |
+| fully connected 2 | 256 |
+| output logits | 17 |
 
+With 30 epochs, I get a validation loss of 0.3227, which follows the training loss closely.  
+![loss chart 3][img_loss_chart_03]
 
+#### Trial 4
+Next, I change the stride of convolution 1 from 2x2 to 1x1.  The training and validation loss jump up and down more during training.  I trined for 20 epochs, it reach the best validation loss at epoch 16, at 0.3274.
+
+| Layer Name    | Kernel/Filter Size | Stride | Padding | Depth / Channels |
+| --- |:---:| :---:| :---:| :---:|
+| convolution 1 | 3x3 | **1x1** | valid | 512 |
+| convolution 2 | 3x3 | 2x2 | valid | 1024 |
+
+| Layer Name | Size |
+| --- |:---:|
+| fully connected 1 | 1024 |
+| fully connected 2 | 256 |
+| output logits | 17 |
+
+![loss chart 4][img_loss_chart_04]
+
+#### Trial 5
+I went back to using 2x2 strides for each convolutional layer, and added a third layer.  In order to keep the height and width of the output from shrinking as quickly, to allow for a third layer, I change padding from valid to same.  I also make the second convolution have a depth of 750 instead of 1024, and the third layer has a depth of 1024.
+I trained for 20 epochs; it gets valid loss .3206 at epoch 17, and gets worse (increases after that).
+
+| Layer Name    | Kernel/Filter Size | Stride | Padding | Depth / Channels |
+| --- |:---:| :---:| :---:| :---:|
+| convolution 1 | 3x3 | **2x2** | **same** | 512 |
+| convolution 2 | 3x3 | 2x2 | **same** | **750** |
+| **convolution 3** | **3x3** | **2x2** | **same** | **1024** |
+
+| Layer Name | Size |
+| --- |:---:|
+| fully connected 1 | 1024 |
+| fully connected 2 | 256 |
+| output logits | 17 |
+
+![loss chart 5][img_loss_chart_05]
+
+#### Trial 6
+I try to use 1 convolutional layer instead of 2 or 3.  I trained for 20 epochs, and it gets a validation loss of 0.3360.
+
+| Layer Name    | Kernel/Filter Size | Stride | Padding | Depth / Channels |
+| --- |:---:| :---:| :---:| :---:|
+| convolution 1 | 3x3 | 2x2 | same | 512 |
+
+| Layer Name | Size |
+| --- |:---:|
+| fully connected 1 | 1024 |
+| fully connected 2 | 256 |
+| output logits | 17 |
+
+![loss chart 6][img_loss_chart_06]
+
+#### Trial 7
+I try increasing the size of the convolutional layer from 512 to 1024, to give more room for learning features.  I trained for 20 epochs, and got a validation loss of 0.3489.
+
+| Layer Name    | Kernel/Filter Size | Stride | Padding | Depth / Channels |
+| --- |:---:| :---:| :---:| :---:|
+| convolution 1 | 3x3 | 2x2 | same | **1024** |
+
+| Layer Name | Size |
+| --- |:---:|
+| fully connected 1 | 1024 |
+| fully connected 2 | 256 |
+| output logits | 17 |
+
+![loss chart 7][img_loss_chart_07]
+
+#### Trial 8
+I try doublig the size of the fully connected dense layers.  I trained for 20 epochs, and the best validation loss at epoch 19 was 0.2898.
+
+| Layer Name    | Kernel/Filter Size | Stride | Padding | Depth / Channels |
+| --- |:---:| :---:| :---:| :---:|
+| convolution 1 | 3x3 | 2x2 | same | 1024 |
+
+| Layer Name | Size |
+| --- |:---:|
+| fully connected 1 | **2048** |
+| fully connected 2 | **512** |
+| output logits | 17 |
+
+![loss chart 8][img_loss_chart_08]
 
 ## IV. Results
 _(approx. 2-3 pages)_
@@ -216,8 +303,11 @@ In this section, the final model and any supporting qualities should be evaluate
 - _Is the model robust enough for the problem? Do small perturbations (changes) in training data or the input space greatly affect the results?_
 - _Can results found from the model be trusted?_
 
+In order to evaluate the model, I use test data that I did not use during training.  This consisted of 100 samples from the original 1147 training samples, that I did not use in the training or in validation.  This resulted in a test loss of 0.2898, which is similar to the validation loss.
 
+Another way I evaluated the model is by predicting on the test sample selected by Kaggle, which is a separate 100 samples that are not part of the 1147 training samples.  Since I don't have the labels for this test sample, I make the predictions and then upload them to Kaggle. Kaggle reports a loss score of 0.28421, which is below my goal of 0.29.
 
+![kaggle test loss][img_test_loss]
 
 ### Justification
 In this section, your model’s final solution and its results should be compared to the benchmark you established earlier in the project using some type of statistical analysis. You should also justify whether these results and the solution are significant enough to have solved the problem posed in the project. Questions to ask yourself when writing this section:
@@ -225,6 +315,12 @@ In this section, your model’s final solution and its results should be compare
 - _Have you thoroughly analyzed and discussed the final solution?_
 - _Is the final solution significant enough to have solved the problem?_
 
+Kaggle provides a benchmark loss value for when all predictions are a 50% chance that every body part of every sample has a hidden threat; this average log loss is 0.69315.  I definitely wanted to get below this.
+
+A benchmark that I set for myself was to reach a loss below 0.2900.  This is because there were many people on the Kaggle leaderboard scoring between 0.2900 and 0.30, ranging from a rank of 57 to 132 (as of August 22, 2017).
+
+Since I reached a score of 0.28421, I reached my goal of reaching a loss lower than 0.2900.
+This score puts me in the top 22% of the contestants as of August 22, 2017.
 
 ## V. Conclusion
 _(approx. 1-2 pages)_
@@ -234,6 +330,8 @@ In this section, you will need to provide some form of visualization that emphas
 - _Have you visualized a relevant or important quality about the problem, dataset, input data, or results?_
 - _Is the visualization thoroughly analyzed and discussed?_
 - _If a plot is provided, are the axes, title, and datum clearly defined?_
+
+
 
 ### Reflection
 In this section, you will summarize the entire end-to-end problem solution and discuss one or two particular aspects of the project you found interesting or difficult. You are expected to reflect on the project as a whole to show that you have a firm understanding of the entire process employed in your work. Questions to ask yourself when writing this section:
