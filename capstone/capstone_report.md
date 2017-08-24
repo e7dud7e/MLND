@@ -1,7 +1,7 @@
 # Machine Learning Engineer Nanodegree
 ## Capstone Project
 Eddy Shyu
-August 13, 2017
+August 23, 2017
 
 [//]: # (Image References)
 
@@ -258,10 +258,9 @@ In this section, the final model and any supporting qualities should be evaluate
 - _Is the model robust enough for the problem? Do small perturbations (changes) in training data or the input space greatly affect the results?_
 - _Can results found from the model be trusted?_
 
-In order to evaluate the model, I use test data that I did not use during training.  This consisted of 100 samples from the original 1147 training samples, that I did not use in the training or in validation.  This resulted in a test loss of (0.2898; re-run this to get correct number), which is similar to the validation loss.
+In order to evaluate the model, I use test data that I did not use during training.  This consisted of 100 samples from the original 1147 training samples, that I did not use in the training or in validation.  This resulted in a test loss of 0.269204, which is lower than the validation loss of 0.2865.
 
-I also modify the test train and validation split, so that I reserve 300 samples for testing, 10 for validation, an 847 for training. The test loss is 0.281498, which is similar to the test loss from before.
-
+I also modify the test train and validation split, so that I reserve 300 samples for testing, 10 for validation, an 847 for training. The test loss is 0.281498, which is slightly higher, but this is expected because I used fewer training samples.
 
 Another way I evaluated the model is by predicting on the test sample selected by Kaggle, which is a separate 100 samples that are not part of the 1147 training samples.  Since I don't have the labels for this test sample, I make the predictions and then upload them to Kaggle. Kaggle reports a loss score of 0.28421, which is below my goal of 0.29.
 
