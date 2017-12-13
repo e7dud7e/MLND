@@ -78,6 +78,7 @@ I display 16 sample images and the locations of the threats.
 ### Exploratory Visualization
 
 I aggregate the label data to show the frequency that a dangerous object is hidden in each of the 17 body regions.  The frequency that a threat occurs on a particular body zone ranges from 7.8% to 11.6%, with an average of 9.6% across all training samples.
+
 ![frequency of threats][img_frequency_threats]
 
 
@@ -113,6 +114,7 @@ The output layer has 17 units, to represent the 17 body region zones.  We pass t
 The Kaggle leaderboard calculates an average log loss function on a test data set, and serves as a good source for a benchmark.  My goal is to reach a loss score of 0.29 or lower, as this is where a significant number of competitors rank.  The loss score for a completely naive 0.5 prediction is 0.69, so I definitely want to score below that.
 
 \pagebreak
+
 ## III. Methodology
 
 ### Data Preprocessing
@@ -252,6 +254,7 @@ I try doubling the size of the fully connected dense layers.  I trained for 20 e
 ![loss chart 8][img_loss_chart_08]
 
 \pagebreak
+
 ## IV. Results
 
 ### Model Evaluation and Validation
@@ -274,6 +277,7 @@ Since I reached a score of 0.28421, I reached my goal of reaching a loss lower t
 This score puts me in the top 22% of the contestants as of August 22, 2017.
 
 \pagebreak
+
 ## V. Conclusion
 
 ### Free-Form Visualization
